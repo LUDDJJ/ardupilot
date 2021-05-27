@@ -295,9 +295,12 @@ public:
         float target;
         float actual;
         float error;
+        float rawTarget;
+        float rawError;
         float P;
         float I;
         float D;
+        float rawD;
         float FF;
     };
 

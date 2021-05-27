@@ -211,6 +211,17 @@ const AP_Param::GroupInfo AP_MotorsMulticopter::var_info[] = {
     // @Increment: 0.001
     // @User: Advanced
     AP_GROUPINFO("SAFE_TIME", 42, AP_MotorsMulticopter, _safe_time, AP_MOTORS_SAFE_TIME_DEFAULT),
+ 
+
+    // @Param: OUTPUT_ENABLE
+    // @DisplayName: enable servo output.
+    // @Description: enable servo output.
+    // @Range: 0 1
+    // @Units: s
+    // @Increment: 1
+    // @User: pipilu
+    AP_GROUPINFO("OUTPUT_EN", 43, AP_MotorsMulticopter, _output_enable, 1),
+
 
     AP_GROUPEND
 };

@@ -33,6 +33,13 @@ void ModeStabilize::run()
         // Motors Stopped
         attitude_control->set_yaw_target_to_current_heading();
         attitude_control->reset_rate_controller_I_terms();
+        // reset yaw rate  --- by pipilu
+        target_yaw_rate = 0.0;
+        /*
+        target_roll = 0.0;
+        target_pitch = 0.0;
+        attitude_control->set_attitude_target_to_current_attitude();
+        */
         break;
 
     case AP_Motors::SpoolState::GROUND_IDLE:

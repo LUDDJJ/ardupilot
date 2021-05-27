@@ -749,10 +749,13 @@ struct PACKED log_PID {
     float   target;
     float   actual;
     float   error;
+    float   rawError;
+    float   rawTarget;
     float   P;
     float   I;
     float   D;
     float   FF;
+    float   rawD;
 };
 
 struct PACKED log_Current {
@@ -1287,8 +1290,8 @@ struct PACKED log_Arm_Disarm {
 #define MAG_UNITS "sGGGGGGGGG-s"
 #define MAG_MULTS "FCCCCCCCCC-F"
 
-#define PID_LABELS "TimeUS,Tar,Act,Err,P,I,D,FF"
-#define PID_FMT    "Qfffffff"
+#define PID_LABELS "TimeUS,Tar,Act,Err,rawErr,rawTar,P,I,D,FF,rawD"
+#define PID_FMT    "Qffffffffff"
 #define PID_UNITS  "s-------"
 #define PID_MULTS  "F-------"
 

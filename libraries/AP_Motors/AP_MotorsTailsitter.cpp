@@ -148,33 +148,72 @@ void AP_MotorsTailsitter::output_armed_stabilizing()
         limit.throttle_lower = true;
     }
     if (throttle_thrust >= _throttle_thrust_max) {
-        throttle_thrust = _throttle_thrust_max;
-        limit.throttle_upper = true;
+            throttle_thrust = _throttle_thrust_max;
+            limit.throttle_upper = true;
     }
 
-    // calculate left and right throttle outputs
-    _thrust_left  = throttle_thrust + roll_thrust * 0.5f;
-    _thrust_right = throttle_thrust - roll_thrust * 0.5f;
+    //Mixer    
+    if(_output_enable){
+        // calculate left and right throttle outputs
+        _thrust_left  = throttle_thrust + roll_thrust * 0.5f;
+        _thrust_right = throttle_thrust - roll_thrust * 0.5f;
 
-    // if max thrust is more than one reduce average throttle
-    thrust_max = MAX(_thrust_right,_thrust_left);
-    if (thrust_max > 1.0f) {
-        thr_adj = 1.0f - thrust_max;
-        limit.throttle_upper = true;
-        limit.roll = true;
-        limit.pitch = true;
+        // if max thrust is more than one reduce average throttle
+        thrust_max = MAX(_thrust_right,_thrust_left);
+        if (thrust_max > 1.0f) {
+            thr_adj = 1.0f - thrust_max;
+            limit.throttle_upper = true;
+            limit.roll = true;
+            limit.pitch = true;
+        }
+
+        // Add adjustment to reduce average throttle
+        _thrust_left  = constrain_float(_thrust_left  + thr_adj, 0.0f, 1.0f);
+        _thrust_right = constrain_float(_thrust_right + thr_adj, 0.0f, 1.0f);
+        _throttle = throttle_thrust + thr_adj;
+        // compensation_gain can never be zero
+        _throttle_out = _throttle / compensation_gain;
+
+        // thrust vectoring
+        _tilt_left  = pitch_thrust - yaw_thrust;
+        _tilt_right = pitch_thrust + yaw_thrust;
+    }else{
+        //by pipilu ------5.15
+
+        //test 
+        //throttle_thrust = 0.4;
+        //todo: how to slove promblem in small throttle_thrust
+
+        //calculate left and right throttle outputs
+
+        
+        // _thrust_left = throttle_thrust + roll_thrust;
+        // _thrust_right = throttle_thrust - roll_thrust;
+
+
+        // constrain_float(_thrust_left , 0.0f, 1.0f);
+        // constrain_float(_thrust_right , 0.0f, 1.0f);
+
+        // _thrust_left = safe_sqrt(_thrust_left*_thrust_left + (pitch_thrust-yaw_thrust)*(pitch_thrust-yaw_thrust));
+        // _thrust_right = safe_sqrt(_thrust_right*_thrust_right + (pitch_thrust+yaw_thrust)*(pitch_thrust+yaw_thrust));
+
+        // constrain_float(_thrust_left , 0.1f, 1.0f);
+        // constrain_float(_thrust_right , 0.1f, 1.0f);
+
+        // _tilt_left = safe_asin((pitch_thrust - yaw_thrust)/(2*_thrust_left)); 
+        // _tilt_right = safe_asin((pitch_thrust + yaw_thrust)/(2*_thrust_right)) ;
+
+        // _tilt_left=degrees(_tilt_left)/45.0f;
+        // _tilt_right=degrees(_tilt_right)/45.0f;
+        
+        //hal.uartF->printf("%f  ",_tilt_left);
+        _thrust_left = 0;
+        _thrust_right = 0;
+        _tilt_left=0;
+        _tilt_left=0;
+
     }
-
-    // Add adjustment to reduce average throttle
-    _thrust_left  = constrain_float(_thrust_left  + thr_adj, 0.0f, 1.0f);
-    _thrust_right = constrain_float(_thrust_right + thr_adj, 0.0f, 1.0f);
-    _throttle = throttle_thrust + thr_adj;
-    // compensation_gain can never be zero
-    _throttle_out = _throttle / compensation_gain;
-
-    // thrust vectoring
-    _tilt_left  = pitch_thrust - yaw_thrust;
-    _tilt_right = pitch_thrust + yaw_thrust;
+    
 }
 
 // output_test_seq - spin a motor at the pwm value specified

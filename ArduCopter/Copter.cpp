@@ -335,6 +335,10 @@ void Copter::fourhundred_hz_logging()
     if (should_log(MASK_LOG_ATTITUDE_FAST) && !copter.flightmode->logs_attitude()) {
         Log_Write_Attitude();
     }
+    // log IMU data if we're not already logging at the higher rate
+    if (should_log(MASK_LOG_IMU) && !should_log(MASK_LOG_IMU_RAW)) {
+        logger.Write_IMU();
+    }
 }
 
 // ten_hz_logging_loop
@@ -394,9 +398,11 @@ void Copter::twentyfive_hz_logging()
         Log_Write_EKF_POS();
     }
 
+    /*
     if (should_log(MASK_LOG_IMU)) {
         logger.Write_IMU();
     }
+    */
 #endif
 
 #if PRECISION_LANDING == ENABLED

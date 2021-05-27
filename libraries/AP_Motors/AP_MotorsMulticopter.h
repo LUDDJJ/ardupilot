@@ -176,6 +176,10 @@ protected:
     // scaling for booster motor throttle
     AP_Float            _boost_scale;
 
+    // Output switch  ---------------------by pipilu 
+    AP_Int8             _output_enable;
+
+
     // motor output variables
     bool                motor_enabled[AP_MOTORS_MAX_NUM_MOTORS];    // true if motor is enabled
     int16_t             _throttle_radio_min;        // minimum PWM from RC input's throttle channel (i.e. minimum PWM input from receiver, RC3_MIN)

@@ -844,10 +844,13 @@ void AP_Logger::Write_PID(uint8_t msg_type, const PID_Info &info)
         target          : info.target,
         actual          : info.actual,
         error           : info.error,
+        rawError        : info.rawError,
+        rawTarget       : info.rawTarget,
         P               : info.P,
         I               : info.I,
         D               : info.D,
-        FF              : info.FF
+        FF              : info.FF,
+        rawD            : info.rawD
     };
     WriteBlock(&pkt, sizeof(pkt));
 }
