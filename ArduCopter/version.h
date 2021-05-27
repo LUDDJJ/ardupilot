@@ -5,7 +5,7 @@
 #endif
 
 #include "ap_version.h"
-
+//designed by pipilu
 #define THISFIRMWARE "ArduCopter V4.1.0-dev"
 
 // the following line is parsed by the autotest scripts
