@@ -301,8 +301,21 @@ public:
         float FF;
     };
 
-    void Write_PID(uint8_t msg_type, const PID_Info &info);
+    // This structure provides information on the internal member data of a LADRC for logging purposes
+    struct LADRC_Info
+    {
+        float TDv1;  //TD filter signs
+        float TDv2;
+        float z3;    //ESO signs
+        float z2;
+        float z1;
+        float PD;    //control output
+        float FF;
+    };
+    
 
+    void Write_PID(uint8_t msg_type, const PID_Info &info);
+    void Write_LADRC(uint8_t msg_type, const LADRC_Info &info);
     // returns true if logging of a message should be attempted
     bool should_log(uint32_t mask) const;
 

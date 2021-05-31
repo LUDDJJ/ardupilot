@@ -235,6 +235,12 @@ const AP_Param::GroupInfo AC_AttitudeControl_Multi::var_info[] = {
     // @Units: Hz
     // @User: Standard
 
+
+
+    AP_SUBGROUPINFO(_ladrc_rate_roll, "RAT_LAR_", 7, AC_AttitudeControl_Multi, AC_LADRC),
+    AP_SUBGROUPINFO(_ladrc_rate_pitch, "RAT_LAP_", 8, AC_AttitudeControl_Multi, AC_LADRC),
+    AP_SUBGROUPINFO(_ladrc_rate_yaw, "RAT_LAY_", 9, AC_AttitudeControl_Multi, AC_LADRC),
+
     AP_GROUPEND
 };
 
@@ -243,7 +249,10 @@ AC_AttitudeControl_Multi::AC_AttitudeControl_Multi(AP_AHRS_View &ahrs, const AP_
     _motors_multi(motors),
     _pid_rate_roll(AC_ATC_MULTI_RATE_RP_P, AC_ATC_MULTI_RATE_RP_I, AC_ATC_MULTI_RATE_RP_D, 0.0f, AC_ATC_MULTI_RATE_RP_IMAX, AC_ATC_MULTI_RATE_RP_FILT_HZ, 0.0f, AC_ATC_MULTI_RATE_RP_FILT_HZ, dt),
     _pid_rate_pitch(AC_ATC_MULTI_RATE_RP_P, AC_ATC_MULTI_RATE_RP_I, AC_ATC_MULTI_RATE_RP_D, 0.0f, AC_ATC_MULTI_RATE_RP_IMAX, AC_ATC_MULTI_RATE_RP_FILT_HZ, 0.0f, AC_ATC_MULTI_RATE_RP_FILT_HZ, dt),
-    _pid_rate_yaw(AC_ATC_MULTI_RATE_YAW_P, AC_ATC_MULTI_RATE_YAW_I, AC_ATC_MULTI_RATE_YAW_D, 0.0f, AC_ATC_MULTI_RATE_YAW_IMAX, AC_ATC_MULTI_RATE_RP_FILT_HZ, AC_ATC_MULTI_RATE_YAW_FILT_HZ, 0.0f, dt)
+    _pid_rate_yaw(AC_ATC_MULTI_RATE_YAW_P, AC_ATC_MULTI_RATE_YAW_I, AC_ATC_MULTI_RATE_YAW_D, 0.0f, AC_ATC_MULTI_RATE_YAW_IMAX, AC_ATC_MULTI_RATE_RP_FILT_HZ, AC_ATC_MULTI_RATE_YAW_FILT_HZ, 0.0f, dt),
+    _ladrc_rate_roll(1,1,1,1,0,dt),
+    _ladrc_rate_pitch(1,1,1,1,0,dt),
+    _ladrc_rate_yaw(1,1,1,1,0,dt)
 {
     AP_Param::setup_object_defaults(this, var_info);
 }
@@ -337,14 +346,14 @@ void AC_AttitudeControl_Multi::rate_controller_run()
 
     Vector3f gyro_latest = _ahrs.get_gyro_latest();
 
-    _motors.set_roll(get_rate_roll_pid().update_all(_rate_target_ang_vel.x, gyro_latest.x, _motors.limit.roll) + _actuator_sysid.x);
-    _motors.set_roll_ff(get_rate_roll_pid().get_ff());
+    _motors.set_roll(get_rate_roll_ladrc().update_all(_rate_target_ang_vel.x, gyro_latest.x, _motors.limit.roll) + _actuator_sysid.x);
+    _motors.set_roll_ff(get_rate_roll_ladrc().get_ff());
 
-    _motors.set_pitch(get_rate_pitch_pid().update_all(_rate_target_ang_vel.y, gyro_latest.y, _motors.limit.pitch) + _actuator_sysid.y);
-    _motors.set_pitch_ff(get_rate_pitch_pid().get_ff());
+    _motors.set_pitch(get_rate_pitch_ladrc().update_all(_rate_target_ang_vel.y, gyro_latest.y, _motors.limit.pitch) + _actuator_sysid.y);
+    _motors.set_pitch_ff(get_rate_pitch_ladrc().get_ff());
 
-    _motors.set_yaw(get_rate_yaw_pid().update_all(_rate_target_ang_vel.z, gyro_latest.z, _motors.limit.yaw) + _actuator_sysid.z);
-    _motors.set_yaw_ff(get_rate_yaw_pid().get_ff()*_feedforward_scalar);
+    _motors.set_yaw(get_rate_yaw_ladrc().update_all(_rate_target_ang_vel.z, gyro_latest.z, _motors.limit.yaw) + _actuator_sysid.z);
+    _motors.set_yaw_ff(get_rate_yaw_ladrc().get_ff()*_feedforward_scalar);
 
     _rate_sysid_ang_vel.zero();
     _actuator_sysid.zero();

@@ -755,6 +755,18 @@ struct PACKED log_PID {
     float   FF;
 };
 
+struct PACKED log_LADRC {
+    LOG_PACKET_HEADER;
+    uint64_t time_us;
+    float   TDv1;
+    float   TDv2;
+    float   z3;
+    float   z2;
+    float   z1;
+    float   PD;
+    float   FF;
+};
+
 struct PACKED log_Current {
     LOG_PACKET_HEADER;
     uint64_t time_us;
@@ -1292,6 +1304,11 @@ struct PACKED log_Arm_Disarm {
 #define PID_UNITS  "s-------"
 #define PID_MULTS  "F-------"
 
+#define LADRC_LABELS "TimeUS,TDv1,TDv2,z3,z2,z1,PD,FF"
+#define LADRC_FMT    "Qfffffff"
+#define LADRC_UNITS  "s-------"
+#define LADRC_MULTS  "F-------"
+
 #define QUAT_LABELS "TimeUS,Q1,Q2,Q3,Q4"
 #define QUAT_FMT    "Qffff"
 #define QUAT_UNITS  "s????"
@@ -1419,7 +1436,13 @@ struct PACKED log_Arm_Disarm {
     { LOG_OA_BENDYRULER_MSG, sizeof(log_OABendyRuler), \
       "OABR","QBHHfLLLL","TimeUS,Active,DesYaw,Yaw,Mar,DLat,DLng,OALat,OALng", "sbddmDUDU", "F----GGGG" }, \
     { LOG_OA_DIJKSTRA_MSG, sizeof(log_OADijkstra), \
-      "OADJ","QBBBBLLLL","TimeUS,State,Err,CurrPoint,TotPoints,DLat,DLng,OALat,OALng", "sbbbbDUDU", "F----GGGG" }
+      "OADJ","QBBBBLLLL","TimeUS,State,Err,CurrPoint,TotPoints,DLat,DLng,OALat,OALng", "sbbbbDUDU", "F----GGGG" }, \
+    { LOG_LADRCR_MSG, sizeof(log_LADRC), \
+      "LADR", LADRC_FMT,  LADRC_LABELS, LADRC_UNITS, LADRC_MULTS }, \
+    { LOG_LADRCP_MSG, sizeof(log_LADRC), \
+      "LADP", LADRC_FMT,  LADRC_LABELS, LADRC_UNITS, LADRC_MULTS }, \
+    { LOG_LADRCY_MSG, sizeof(log_LADRC), \
+      "LADY", LADRC_FMT,  LADRC_LABELS, LADRC_UNITS, LADRC_MULTS }
 
 // messages for more advanced boards
 #define LOG_EXTRA_STRUCTURES \
@@ -1633,6 +1656,8 @@ struct PACKED log_Arm_Disarm {
 
 // message types for common messages
 enum LogMessages : uint8_t {
+
+
     LOG_NKF1_MSG = 64,
     LOG_NKF2_MSG,
     LOG_NKF3_MSG,
@@ -1670,6 +1695,10 @@ enum LogMessages : uint8_t {
     LOG_XKFD_MSG,
     LOG_XKV1_MSG,
     LOG_XKV2_MSG,
+
+    LOG_LADRCR_MSG,   //pipilu define
+    LOG_LADRCP_MSG,
+    LOG_LADRCY_MSG,
 
     LOG_FORMAT_MSG = 128, // this must remain #128
 

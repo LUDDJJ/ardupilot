@@ -852,6 +852,24 @@ void AP_Logger::Write_PID(uint8_t msg_type, const PID_Info &info)
     WriteBlock(&pkt, sizeof(pkt));
 }
 
+// Write a Yaw LADRC packet
+void AP_Logger::Write_LADRC(uint8_t msg_type, const LADRC_Info &info)
+{
+    const struct log_LADRC pkt{
+        LOG_PACKET_HEADER_INIT(msg_type),
+        time_us         : AP_HAL::micros64(),
+        TDv1            : info.TDv1,
+        TDv2            : info.TDv2,
+        z3              : info.z3,
+        z2              : info.z2,
+        z1              : info.z1,
+        PD              : info.PD,
+        FF              : info.FF
+    };
+    WriteBlock(&pkt, sizeof(pkt));
+}
+
+
 void AP_Logger::Write_Origin(uint8_t origin_type, const Location &loc)
 {
     const struct log_ORGN pkt{
