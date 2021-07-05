@@ -662,6 +662,13 @@ void AP_MotorsMulticopter::output_logic()
         // Servos should exhibit normal flight behavior.
 
         // initialize limits flags
+        // pitch integral process --by pipilu
+        //if(get_throttle()>0.19f){
+        //    limit.pitch = false;   
+        //}else{
+        //    limit.pitch = true;
+        //}
+        limit.pitch = false;  
         limit.roll = false;
         limit.pitch = false;
         limit.yaw = false;

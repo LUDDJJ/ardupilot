@@ -181,37 +181,39 @@ void AP_MotorsTailsitter::output_armed_stabilizing()
         //by pipilu ------5.15
 
         //test 
-        //throttle_thrust = 0.4;
+        throttle_thrust = 0.4;
         //todo: how to slove promblem in small throttle_thrust
 
-        //calculate left and right throttle outputs
-
+        //constrain input 
+        constrain_float(roll_thrust , -1.0f, 1.0f);
+        constrain_float(pitch_thrust , -1.0f, 1.0f);
+        constrain_float(yaw_thrust , -1.0f, 1.0f);
+        constrain_float(throttle_thrust , 0.0f, 2.0f);
         
-        // _thrust_left = throttle_thrust + roll_thrust;
-        // _thrust_right = throttle_thrust - roll_thrust;
+        _thrust_left = throttle_thrust + 0.5f*roll_thrust;
+        _thrust_right = throttle_thrust - 0.5f*roll_thrust;
 
+        constrain_float(_thrust_left , 0.0f, 2.0f);
+        constrain_float(_thrust_right , 0.0f, 2.0f);
 
-        // constrain_float(_thrust_left , 0.0f, 1.0f);
-        // constrain_float(_thrust_right , 0.0f, 1.0f);
+        _thrust_left  = 0.5f*safe_sqrt(_thrust_left*_thrust_left + (pitch_thrust-yaw_thrust)*(pitch_thrust-yaw_thrust));
+        _thrust_right = 0.5f*safe_sqrt(_thrust_right*_thrust_right + (pitch_thrust+yaw_thrust)*(pitch_thrust+yaw_thrust));
 
-        // _thrust_left = safe_sqrt(_thrust_left*_thrust_left + (pitch_thrust-yaw_thrust)*(pitch_thrust-yaw_thrust));
-        // _thrust_right = safe_sqrt(_thrust_right*_thrust_right + (pitch_thrust+yaw_thrust)*(pitch_thrust+yaw_thrust));
+        constrain_float(_thrust_left ,  0, 1.0f);
+        constrain_float(_thrust_right , 0, 1.0f);
 
-        // constrain_float(_thrust_left , 0.1f, 1.0f);
-        // constrain_float(_thrust_right , 0.1f, 1.0f);
+        //hover thrust
+        if(_thrust_left>0.3)    _tilt_left = safe_asin((pitch_thrust - yaw_thrust)/(2*_thrust_left)); 
+        else _tilt_left = safe_asin((pitch_thrust - yaw_thrust)/(2*0.3)); 
+        if(_tilt_right>0.3)     _tilt_right = safe_asin((pitch_thrust + yaw_thrust)/(2*_thrust_right));
+        else _tilt_right = safe_asin((pitch_thrust + yaw_thrust)/(2*0.3));
 
-        // _tilt_left = safe_asin((pitch_thrust - yaw_thrust)/(2*_thrust_left)); 
-        // _tilt_right = safe_asin((pitch_thrust + yaw_thrust)/(2*_thrust_right)) ;
-
-        // _tilt_left=degrees(_tilt_left)/45.0f;
-        // _tilt_right=degrees(_tilt_right)/45.0f;
+        _tilt_left=degrees(_tilt_left)/45.0f;
+        _tilt_right=degrees(_tilt_right)/45.0f;
         
-        //hal.uartF->printf("%f  ",_tilt_left);
+        hal.uartF->printf("%f %f \r\n",_tilt_left,_tilt_right);
         _thrust_left = 0;
         _thrust_right = 0;
-        _tilt_left=0;
-        _tilt_left=0;
-
     }
     
 }

@@ -337,6 +337,19 @@ void AC_AttitudeControl_Multi::rate_controller_run()
 
     Vector3f gyro_latest = _ahrs.get_gyro_latest();
 
+
+    // weight moment ff   --------------by pipilu
+    Quaternion attitude_vehicle_quat;
+    Matrix3f attitude_vehicle_DCM;
+    _ahrs.get_quat_body_to_ned(attitude_vehicle_quat);
+    attitude_vehicle_quat.from_rotation_matrix(attitude_vehicle_DCM);
+    attitude_vehicle_DCM.transpose();     //DMC  NED TO Body    
+    //Vector3f mg_vec = attitude_vehicle_DCM*Vector3f(0.0f,0.0f,1.0f);
+    //Vector3f weight_moment = Vector3f(0.0f,0.0f,1.0f) % mg_vec;  //weight moment
+
+    //set yaw_rate_target_ang_vel =0  --------------by pipilu
+    //_rate_target_ang_vel.z =0 ;
+
     _motors.set_roll(get_rate_roll_pid().update_all(_rate_target_ang_vel.x, gyro_latest.x, _motors.limit.roll) + _actuator_sysid.x);
     _motors.set_roll_ff(get_rate_roll_pid().get_ff());
 
