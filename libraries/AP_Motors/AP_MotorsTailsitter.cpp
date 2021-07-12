@@ -22,6 +22,7 @@
 #include <AP_Math/AP_Math.h>
 #include "AP_MotorsTailsitter.h"
 #include <GCS_MAVLink/GCS.h>
+#include <AP_Logger/AP_Logger.h>  
 
 extern const AP_HAL::HAL& hal;
 
@@ -180,40 +181,61 @@ void AP_MotorsTailsitter::output_armed_stabilizing()
     }else{
         //by pipilu ------5.15
 
-        //test 
-        throttle_thrust = 0.4;
-        //todo: how to slove promblem in small throttle_thrust
+        //todo: how to slove promblem in small throttle_thrust!!!!!
 
         //constrain input 
-        constrain_float(roll_thrust , -1.0f, 1.0f);
-        constrain_float(pitch_thrust , -1.0f, 1.0f);
-        constrain_float(yaw_thrust , -1.0f, 1.0f);
-        constrain_float(throttle_thrust , 0.0f, 2.0f);
+        roll_thrust=roll_thrust/2;
+        pitch_thrust=pitch_thrust/2;
+        yaw_thrust = yaw_thrust/2;
+
+        roll_thrust = constrain_float(roll_thrust , -0.2f, 0.2f);
+        pitch_thrust = constrain_float(pitch_thrust , -0.2f, 0.2f);
+        yaw_thrust = constrain_float(yaw_thrust , -0.2f, 0.2f);
+        throttle_thrust = constrain_float(throttle_thrust , 0.4f, 1.0f);
+        float scale=0;
+        if(throttle_thrust>0.4f){
+
+        }else{
+            scale=(throttle_thrust/0.2f);
+            if (scale<0.1)
+            {
+                scale=0;
+            }
+            roll_thrust =roll_thrust*scale;
+            pitch_thrust=pitch_thrust*scale;
+            yaw_thrust = yaw_thrust*scale;
+        }
         
-        _thrust_left = throttle_thrust + 0.5f*roll_thrust;
-        _thrust_right = throttle_thrust - 0.5f*roll_thrust;
-
-        constrain_float(_thrust_left , 0.0f, 2.0f);
-        constrain_float(_thrust_right , 0.0f, 2.0f);
-
-        _thrust_left  = 0.5f*safe_sqrt(_thrust_left*_thrust_left + (pitch_thrust-yaw_thrust)*(pitch_thrust-yaw_thrust));
-        _thrust_right = 0.5f*safe_sqrt(_thrust_right*_thrust_right + (pitch_thrust+yaw_thrust)*(pitch_thrust+yaw_thrust));
-
-        constrain_float(_thrust_left ,  0, 1.0f);
-        constrain_float(_thrust_right , 0, 1.0f);
-
-        //hover thrust
-        if(_thrust_left>0.3)    _tilt_left = safe_asin((pitch_thrust - yaw_thrust)/(2*_thrust_left)); 
-        else _tilt_left = safe_asin((pitch_thrust - yaw_thrust)/(2*0.3)); 
-        if(_tilt_right>0.3)     _tilt_right = safe_asin((pitch_thrust + yaw_thrust)/(2*_thrust_right));
-        else _tilt_right = safe_asin((pitch_thrust + yaw_thrust)/(2*0.3));
-
-        _tilt_left=degrees(_tilt_left)/45.0f;
-        _tilt_right=degrees(_tilt_right)/45.0f;
+        _thrust_left = throttle_thrust + roll_thrust;
+        _thrust_right = throttle_thrust - roll_thrust;
         
-        hal.uartF->printf("%f %f \r\n",_tilt_left,_tilt_right);
-        _thrust_left = 0;
-        _thrust_right = 0;
+        // todo:if max thrust is more than one reduce average throttle
+
+        _thrust_left = constrain_float(_thrust_left , 0.01f, 1.0f);   //need procesS roll pid i limit 
+        _thrust_right = constrain_float(_thrust_right , 0.01f, 1.0f);
+
+        //single thrust normalization
+        _thrust_left  = safe_sqrt(_thrust_left*_thrust_left + (pitch_thrust-yaw_thrust)*(pitch_thrust-yaw_thrust));
+        _thrust_right = safe_sqrt(_thrust_right*_thrust_right + (pitch_thrust+yaw_thrust)*(pitch_thrust+yaw_thrust));
+        
+        _thrust_left = constrain_float(_thrust_left , 0.0f, 1.0f);   //need procese limit 
+        _thrust_right = constrain_float(_thrust_right , 0.0f, 1.0f);
+
+        _tilt_left = safe_asin((pitch_thrust - yaw_thrust)/(_thrust_left)); 
+        _tilt_right = safe_asin((pitch_thrust + yaw_thrust)/(_thrust_right));
+
+        _tilt_left = degrees(_tilt_left)/45.0f;
+        _tilt_right = degrees(_tilt_right)/45.0f;
+        
+        //servo output limit
+        _tilt_left = constrain_float(_tilt_left ,  -1.0f, 1.0f);
+        _tilt_right = constrain_float(_tilt_right , -1.0f, 1.0f);
+
+        //AP::logger().Write("tset", "TimeUS,Sr", "Qf",
+                                        //AP_HAL::micros64(),
+                                        //(double)throttle_thrust);
+        //_thrust_left = 0;
+        //_thrust_right = 0;
     }
     
 }
