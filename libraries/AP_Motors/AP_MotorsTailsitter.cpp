@@ -75,6 +75,10 @@ void AP_MotorsTailsitter::set_update_rate(uint16_t speed_hz)
 
     SRV_Channels::set_rc_frequency(SRV_Channel::k_throttleLeft, speed_hz);
     SRV_Channels::set_rc_frequency(SRV_Channel::k_throttleRight, speed_hz);
+
+    //servo 
+    SRV_Channels::set_rc_frequency(SRV_Channel::k_tiltMotorLeft, 333);
+    SRV_Channels::set_rc_frequency(SRV_Channel::k_tiltMotorRight, 333);
 }
 
 void AP_MotorsTailsitter::output_to_motors()
@@ -87,6 +91,12 @@ void AP_MotorsTailsitter::output_to_motors()
         case SpoolState::SHUT_DOWN:
             SRV_Channels::set_output_pwm(SRV_Channel::k_throttleLeft, get_pwm_output_min());
             SRV_Channels::set_output_pwm(SRV_Channel::k_throttleRight, get_pwm_output_min());
+
+            //_output_enable >=2  SERVO CANT START IN SHUT_DOWN
+            if(_output_enable>=2){
+               _tilt_left =0.0f;
+               _tilt_right = 0.0f;             
+            }
             break;
         case SpoolState::GROUND_IDLE:
             set_actuator_with_slew(_actuator[1], actuator_spin_up_to_ground_idle());
@@ -102,6 +112,7 @@ void AP_MotorsTailsitter::output_to_motors()
     }
 
     // Always output to tilt servos
+    // SERVO_OUTPUT_RANGE change to 30 degree
     SRV_Channels::set_output_scaled(SRV_Channel::k_tiltMotorLeft, _tilt_left*SERVO_OUTPUT_RANGE);
     SRV_Channels::set_output_scaled(SRV_Channel::k_tiltMotorRight, _tilt_right*SERVO_OUTPUT_RANGE);
 
@@ -182,37 +193,75 @@ void AP_MotorsTailsitter::output_armed_stabilizing()
         //by pipilu ------5.15
 
         //todo: how to slove promblem in small throttle_thrust!!!!!
-
+        float   rpy_scale = 0.1f; 
         //constrain input 
-        roll_thrust=roll_thrust/2;
-        pitch_thrust=pitch_thrust/2;
-        yaw_thrust = yaw_thrust/2;
+        roll_thrust=roll_thrust*rpy_scale;
+        pitch_thrust = pitch_thrust*rpy_scale;
+        yaw_thrust = yaw_thrust*rpy_scale;
 
-        roll_thrust = constrain_float(roll_thrust , -0.2f, 0.2f);
-        pitch_thrust = constrain_float(pitch_thrust , -0.2f, 0.2f);
-        yaw_thrust = constrain_float(yaw_thrust , -0.2f, 0.2f);
-        throttle_thrust = constrain_float(throttle_thrust , 0.4f, 1.0f);
-        float scale=0;
-        if(throttle_thrust>0.4f){
-
-        }else{
-            scale=(throttle_thrust/0.2f);
-            if (scale<0.1)
-            {
-                scale=0;
-            }
-            roll_thrust =roll_thrust*scale;
-            pitch_thrust=pitch_thrust*scale;
-            yaw_thrust = yaw_thrust*scale;
+        if(abs(roll_thrust)>0.2f){
+           roll_thrust = constrain_float(roll_thrust , -0.2f, 0.2f); 
+           limit.roll = true;
         }
-        
+        if(abs(pitch_thrust)>0.2f){
+            pitch_thrust = constrain_float(pitch_thrust , -0.2f, 0.2f);
+            limit.pitch = true;
+        }
+        if(abs(yaw_thrust)>0.2f){
+            yaw_thrust = constrain_float(yaw_thrust , -0.2f, 0.2f);
+        }
+
+        throttle_thrust = constrain_float(throttle_thrust , 0.1f, 1.0f);   
+
+        //low throttle problem
+        // limit = 1/3 * thrust
+        float rpy_high=abs(roll_thrust) + abs(pitch_thrust) + abs(yaw_thrust);
+        if(rpy_high< throttle_thrust){
+
+        }
+        else{
+            //todo :frist think roll and pitch control ,  not think yaw control
+
+            //frist think roll and pitch control and scale
+            /*
+            rpy_scale = throttle_thrust/(rpy_high);
+            //rpy_scale = throttle_thrust;
+            roll_thrust = rpy_scale*roll_thrust;
+            pitch_thrust = rpy_scale*pitch_thrust;
+            yaw_thrust = rpy_scale*yaw_thrust;
+            */
+
+            //no process throttle
+            // another approach: Push up throttle
+            limit.throttle_lower = true;
+            limit.roll = true;
+            limit.pitch = true;
+            limit.yaw = true;
+        }
+            
         _thrust_left = throttle_thrust + roll_thrust;
         _thrust_right = throttle_thrust - roll_thrust;
-        
+        _tilt_left  = pitch_thrust - yaw_thrust;
+        _tilt_right = pitch_thrust + yaw_thrust;
         // todo:if max thrust is more than one reduce average throttle
+        // if max thrust is more than one reduce average throttle
+        thrust_max = MAX(_thrust_right,_thrust_left);
+        float py_max = MAX(_tilt_left,_tilt_right);
+        float tr_max = safe_sqrt(1 - py_max * py_max );
+        if(tr_max < thrust_max){
+            thr_adj = tr_max - thrust_max;
+            limit.throttle_upper = true;
+            limit.roll = true;
+            limit.pitch = true;
+            limit.yaw = true;
+        }
+        _thrust_left = constrain_float(_thrust_left + thr_adj , 0.01f, 1.0f);   //need procesS roll pid i limit 
+        _thrust_right = constrain_float(_thrust_right + thr_adj , 0.01f, 1.0f);
+        _throttle = throttle_thrust + thr_adj;
+        // compensation_gain can never be zero
+        _throttle_out = _throttle / compensation_gain;
 
-        _thrust_left = constrain_float(_thrust_left , 0.01f, 1.0f);   //need procesS roll pid i limit 
-        _thrust_right = constrain_float(_thrust_right , 0.01f, 1.0f);
+
 
         //single thrust normalization
         _thrust_left  = safe_sqrt(_thrust_left*_thrust_left + (pitch_thrust-yaw_thrust)*(pitch_thrust-yaw_thrust));
@@ -231,11 +280,11 @@ void AP_MotorsTailsitter::output_armed_stabilizing()
         _tilt_left = constrain_float(_tilt_left ,  -1.0f, 1.0f);
         _tilt_right = constrain_float(_tilt_right , -1.0f, 1.0f);
 
+        _tilt_left = 0.0f;
+        _tilt_right = 0.0f;
         //AP::logger().Write("tset", "TimeUS,Sr", "Qf",
                                         //AP_HAL::micros64(),
                                         //(double)throttle_thrust);
-        //_thrust_left = 0;
-        //_thrust_right = 0;
     }
     
 }
