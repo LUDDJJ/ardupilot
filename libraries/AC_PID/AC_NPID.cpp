@@ -33,13 +33,13 @@ const AP_Param::GroupInfo AC_NPID::var_info[] = {
     AP_GROUPINFO("IMAX", 5, AC_NPID, _kimax, 0),
 
     // Fal D
-    AP_GROUPINFO("alphaP", 6, AC_NPID, _alpha_P, 0),
+    //AP_GROUPINFO("alphaP", 6, AC_NPID, _alpha_P, 0),
 
     // Fal P
-    AP_GROUPINFO("alphaD", 7, AC_NPID, _alpha_D, 0),
+    //AP_GROUPINFO("alphaD", 7, AC_NPID, _alpha_D, 0),
 
     // line range
-    AP_GROUPINFO("delta", 8, AC_NPID, _delta, 0),
+    //AP_GROUPINFO("delta", 8, AC_NPID, _delta, 0),
 
     // @Param: FLTT
     // @DisplayName: PID Target filter frequency in Hz
@@ -58,6 +58,15 @@ const AP_Param::GroupInfo AC_NPID::var_info[] = {
     // @Description: Derivative filter frequency in Hz
     // @Units: Hz
     AP_GROUPINFO("FLTD", 11, AC_NPID, _filt_D_hz, AC_PID_DFILT_HZ_DEFAULT),
+
+    // Fal D
+    AP_GROUPINFO("aP", 12, AC_NPID, _alpha_P, 0),
+
+    // Fal P
+    AP_GROUPINFO("aD", 13, AC_NPID, _alpha_D, 0),
+
+    // line range
+    AP_GROUPINFO("dlta", 14, AC_NPID, _delta, 0),
 
     AP_GROUPEND
 };

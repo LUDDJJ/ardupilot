@@ -211,6 +211,7 @@ const AP_Param::GroupInfo AC_AttitudeControl_Multi::var_info[] = {
     // @User: Advanced
     AP_GROUPINFO("THR_MIX_MAN", 6, AC_AttitudeControl_Multi, _thr_mix_man, AC_ATTITUDE_CONTROL_MAN_DEFAULT),
 
+    AP_SUBGROUPINFO(_npid_rate_pitch, "NEF_PIT_", 7, AC_AttitudeControl_Multi, AC_NPID),
     // @Param: RAT_RLL_FILT
     // @DisplayName: Roll axis rate controller input frequency in Hz
     // @Description: Roll axis rate controller input frequency in Hz
@@ -234,7 +235,6 @@ const AP_Param::GroupInfo AC_AttitudeControl_Multi::var_info[] = {
     // @Increment: 1
     // @Units: Hz
     // @User: Standard
-
     AP_GROUPEND
 };
 
